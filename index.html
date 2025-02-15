@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeichenfläche</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .toolbar {
+            margin-bottom: 10px;
+        }
+        canvas {
+            background: repeating-linear-gradient(
+                0deg, #ccc, #ccc 1px, transparent 1px, transparent 20px),
+                repeating-linear-gradient(
+                90deg, #ccc, #ccc 1px, transparent 1px, transparent 20px);
+            border: 2px solid #333;
+            cursor: crosshair;
+        }
+        button, input {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input[type="color"] {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <input type="color" id="colorPicker" value="#000000">
+        <button onclick="changeColor()">Farbe ändern</button>
+        <button onclick="clearCanvas()">Löschen</button>
+        <button onclick="toggleEraser()">Radierer</button>
+    </div>
+    <canvas id="canvas" width="800" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+        let erasing = false;
+        let currentColor = "#000000";
+        let lineWidth = 3;
+        
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', stopPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        function startPosition(e) {
+            painting = true;
+            draw(e);
+        }
+
+        function stopPosition() {
+            painting = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!painting) return;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = erasing ? '#f0f0f0' : currentColor;
+            ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+        }
+
+        function changeColor() {
+            currentColor = document.getElementById('colorPicker').value;
+            erasing = false;
+        }
+
+        function toggleEraser() {
+            erasing = !erasing;
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
