@@ -15,6 +15,7 @@
             justify-content: center;
             height: 100vh;
             background-color: #f0f0f0;
+            touch-action: none;
         }
         .toolbar {
             position: fixed;
@@ -92,10 +93,6 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        canvas.addEventListener('mousedown', startPosition);
-        canvas.addEventListener('mouseup', stopPosition);
-        canvas.addEventListener('mousemove', draw);
-
         function startPosition(e) {
             if (e.target.closest('.toolbar')) return;
             painting = true;
@@ -109,13 +106,15 @@
 
         function draw(e) {
             if (!painting) return;
+            const x = e.clientX || e.touches[0].clientX;
+            const y = e.clientY || e.touches[0].clientY;
             ctx.lineWidth = erasing ? eraserSize : lineWidth;
             ctx.lineCap = 'round';
             ctx.strokeStyle = erasing ? '#f0f0f0' : currentColor;
-            ctx.lineTo(e.clientX, e.clientY);
+            ctx.lineTo(x, y);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(e.clientX, e.clientY);
+            ctx.moveTo(x, y);
         }
 
         function changeColor() {
@@ -138,6 +137,14 @@
         document.getElementById('colorButton').addEventListener('click', changeColor);
         document.getElementById('eraserButton').addEventListener('click', toggleEraser);
         document.getElementById('clearButton').addEventListener('click', clearCanvas);
+        
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', stopPosition);
+        canvas.addEventListener('mousemove', draw);
+        
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPosition(e); });
+        canvas.addEventListener('touchend', stopPosition);
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
     </script>
 </body>
 </html>
