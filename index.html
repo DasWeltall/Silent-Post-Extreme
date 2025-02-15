@@ -5,56 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zeichenfläche</title>
     <style>
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+        
         body {
+            margin: 0;
+            overflow: hidden;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             background-color: #f0f0f0;
         }
         .toolbar {
-            margin-bottom: 10px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        .toolbar button, .toolbar input {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+            transition: transform 0.2s ease;
+        }
+        .toolbar button:hover {
+            transform: scale(1.1);
+        }
+        .toolbar input[type="color"] {
+            width: 30px;
+            height: 30px;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        .toolbar input[type="range"] {
+            width: 100px;
         }
         canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background: repeating-linear-gradient(
                 0deg, #ccc, #ccc 1px, transparent 1px, transparent 20px),
                 repeating-linear-gradient(
                 90deg, #ccc, #ccc 1px, transparent 1px, transparent 20px);
-            border: 2px solid #333;
             cursor: crosshair;
-        }
-        button, input {
-            padding: 10px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button {
-            background-color: #007BFF;
-            color: white;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        input[type="color"] {
-            width: 50px;
-            height: 50px;
-            padding: 0;
-            border: 2px solid #333;
+            z-index: 1;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="toolbar">
-        <input type="color" id="colorPicker" value="#000000">
-        <button onclick="changeColor()">Farbe ändern</button>
-        <button onclick="clearCanvas()">Löschen</button>
-        <button onclick="toggleEraser()">Radierer</button>
+        <input type="color" id="colorPicker" value="#000000" onchange="changeColor()">
+        <button id="colorButton" title="Farbe wählen"><i class="fa-solid fa-palette"></i></button>
+        <button id="clearButton" title="Leeren"><i class="fa-solid fa-trash"></i></button>
+        <button id="eraserButton" title="Radierer"><i class="fa-solid fa-eraser"></i></button>
+        <input type="range" id="brushSize" min="1" max="20" value="3" onchange="changeBrushSize()">
     </div>
-    <canvas id="canvas" width="800" height="500"></canvas>
+    <canvas id="canvas"></canvas>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -62,12 +83,21 @@
         let erasing = false;
         let currentColor = "#000000";
         let lineWidth = 3;
-        
+        let eraserSize = 20;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         canvas.addEventListener('mousedown', startPosition);
         canvas.addEventListener('mouseup', stopPosition);
         canvas.addEventListener('mousemove', draw);
 
         function startPosition(e) {
+            if (e.target.closest('.toolbar')) return;
             painting = true;
             draw(e);
         }
@@ -79,13 +109,13 @@
 
         function draw(e) {
             if (!painting) return;
-            ctx.lineWidth = lineWidth;
+            ctx.lineWidth = erasing ? eraserSize : lineWidth;
             ctx.lineCap = 'round';
             ctx.strokeStyle = erasing ? '#f0f0f0' : currentColor;
-            ctx.lineTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+            ctx.lineTo(e.clientX, e.clientY);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(e.clientX - canvas.offsetLeft, e.clientY - canvas.offsetTop);
+            ctx.moveTo(e.clientX, e.clientY);
         }
 
         function changeColor() {
@@ -100,6 +130,14 @@
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
+
+        function changeBrushSize() {
+            lineWidth = document.getElementById('brushSize').value;
+        }
+
+        document.getElementById('colorButton').addEventListener('click', changeColor);
+        document.getElementById('eraserButton').addEventListener('click', toggleEraser);
+        document.getElementById('clearButton').addEventListener('click', clearCanvas);
     </script>
 </body>
 </html>
